@@ -5,7 +5,7 @@ import common.*;
 import java.util.concurrent.ForkJoinPool;
 
 public class Main {
-    static void main() {
+    public static void main(String[] args) {
         int threads = Runtime.getRuntime().availableProcessors();
 
         try (var pool = new ForkJoinPool(threads)) {
@@ -18,6 +18,8 @@ public class Main {
             var naive = ops.newMatrix(n, n);
             var binet = ops.newMatrix(n, n);
             var binetPar = ops.newMatrix(n, n);
+            var strassen = ops.newMatrix(n, n);
+            var strassenPar = ops.newMatrix(n, n);
 
             ops.resetCounters();
             long t = System.nanoTime();
@@ -34,8 +36,20 @@ public class Main {
             Binet.multiply(ops, x.view(), y.view(), binetPar.view(), 64, pool);
             report("Binet (" + threads + " wątków)", ops, t);
 
+            ops.resetCounters();
+            t = System.nanoTime();
+            Strassen.multiply(ops, x.view(), y.view(), strassen.view(), 64);
+            report("Strassen (" + threads + " wątków)", ops, t);
+
+            ops.resetCounters();
+            t = System.nanoTime();
+            Strassen.multiply(ops, x.view(), y.view(), strassenPar.view(), 64, pool);
+            report("Strassen (" + threads + " wątków)", ops, t);
+
             check(ops, naive, binet);
             check(ops, naive, binetPar);
+            check(ops, naive, strassen);
+            check(ops, naive, strassenPar);
         }
     }
 
