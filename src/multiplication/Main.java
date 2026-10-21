@@ -87,7 +87,7 @@ public class Main {
         var time = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss"));
         try (var pool = new ForkJoinPool(threads)) {
             var ops = new DoubleOps();
-            for (int n = 2; n < 2000; n += 2) {
+            for (int n = 2; n < 2000; n += 4) {
 
                 var rnd = new java.util.Random(42);
                 var x = ops.random(n, n, -1, 1, rnd);
@@ -103,37 +103,37 @@ public class Main {
                 ops.resetCounters();
                 long t = System.nanoTime();
                 ops.multiply(x.view(), y.view(), naive.view());
-                saveData("naive", ops, t, time);
+                saveData(n, "naive", ops, t, time);
 
                 ops.resetCounters();
                 t = System.nanoTime();
                 Binet.multiply(ops, x.view(), y.view(), binet.view(), 64);
-                saveData("binet", ops, t, time);
+                saveData(n, "binet", ops, t, time);
 
                 ops.resetCounters();
                 t = System.nanoTime();
                 Binet.multiply(ops, x.view(), y.view(), binetPar.view(), 64, pool);
-                saveData("binet_threads", ops, t, time);
+                saveData(n, "binet_threads", ops, t, time);
 
                 ops.resetCounters();
                 t = System.nanoTime();
                 Strassen.multiply(ops, x.view(), y.view(), strassen.view(), 64);
-                saveData("strassen", ops, t, time);
+                saveData(n, "strassen", ops, t, time);
 
                 ops.resetCounters();
                 t = System.nanoTime();
                 Strassen.multiply(ops, x.view(), y.view(), strassenPar.view(), 64, pool);
-                saveData("strassen_threads", ops, t, time);
+                saveData(n, "strassen_threads", ops, t, time);
 
                 ops.resetCounters();
                 t = System.nanoTime();
                 Laderman.multiply(ops, x.view(), y.view(), laderman.view(), 64);
-                saveData("laderman", ops, t, time);
+                saveData(n, "laderman", ops, t, time);
 
                 ops.resetCounters();
                 t = System.nanoTime();
                 Laderman.multiply(ops, x.view(), y.view(), ladermanPar.view(), 64, pool);
-                saveData("laderman_threads", ops, t, time);
+                saveData(n, "laderman_threads", ops, t, time);
 
                 check(ops, naive, binet);
                 check(ops, naive, binetPar);
@@ -158,10 +158,11 @@ public class Main {
                     throw new AssertionError("Różnica w (" + i + "," + j + ")");
     }
 
-    private static void saveData(String name, MatrixOps<?> ops, long start, String time) throws IOException {
-        try (PrintWriter writer = new PrintWriter(new FileWriter(String.format("%s_%s.csv", name, time), true))) {
-            writer.printf("%s;%d;%d;%d%n",
-                    name, (System.nanoTime() - start) / 1_000_000, ops.muls.sum(), ops.adds.sum());
+    private static void saveData(int size, String name, MatrixOps<?> ops, long start, String time) throws IOException {
+        try (PrintWriter writer = new PrintWriter(
+                new FileWriter(String.format("test_data/multiplication/%s_%s.csv", name, time), true))) {
+            writer.printf("%d;%s;%d;%d;%d%n",
+                    size, name, (System.nanoTime() - start) / 1_000_000, ops.muls.sum(), ops.adds.sum());
         }
     }
 }

@@ -243,14 +243,14 @@ public class Laderman {
             ladermanMultiply(ops, lA, lB, m15r, leaf, pool);
         };
 
-        // M16 = (-A13 + A22 + A23) * (B23 - B31 + B33)
+        // M16 = (-A13 + A22 + A23) * (B23 + B31 - B33)
         Runnable t16 = () -> {
             var lA = ops.newMatrix(m3, k3).view();
             var lB = ops.newMatrix(k3, n3).view();
             ops.subtract(a22, a13, lA);
             ops.add(lA, a23, lA);
-            ops.subtract(b23, b31, lB);
-            ops.add(lB, b33, lB);
+            ops.add(b23, b31, lB);
+            ops.subtract(lB, b33, lB);
             ladermanMultiply(ops, lA, lB, m16r, leaf, pool);
         };
 
@@ -373,9 +373,8 @@ public class Laderman {
         ops.add(m6r, m14r, c11);
         ops.add(c11, m19r, c11);
 
-        // C12 = M1 + M2 + M4 + M5 + M6 + M12 + M14 + M15
-        ops.add(m1r, m2r, c12);
-        ops.add(c12, m4r, c12);
+        // C12 = M1 + M4 + M5 + M6 + M12 + M14 + M15
+        ops.add(m1r, m4r, c12);
         ops.add(c12, m5r, c12);
         ops.add(c12, m6r, c12);
         ops.add(c12, m12r, c12);
@@ -390,10 +389,9 @@ public class Laderman {
         ops.add(c13, m16r, c13);
         ops.add(c13, m18r, c13);
 
-        // C21 = M2 + M3 + M4 + M5 + M6 + M14 + M16 + M17
+        // C21 = M2 + M3 + M4 + M6 + M14 + M16 + M17
         ops.add(m2r, m3r, c21);
         ops.add(c21, m4r, c21);
-        ops.add(c21, m5r, c21);
         ops.add(c21, m6r, c21);
         ops.add(c21, m14r, c21);
         ops.add(c21, m16r, c21);
@@ -411,10 +409,9 @@ public class Laderman {
         ops.add(c23, m18r, c23);
         ops.add(c23, m21r, c23);
 
-        // C31 = M6 + M7 + M8 + M9 + M11 + M12 + M13 + M14
+        // C31 = M6 + M7 + M8 + M11 + M12 + M13 + M14
         ops.add(m6r, m7r, c31);
         ops.add(c31, m8r, c31);
-        ops.add(c31, m9r, c31);
         ops.add(c31, m11r, c31);
         ops.add(c31, m12r, c31);
         ops.add(c31, m13r, c31);
