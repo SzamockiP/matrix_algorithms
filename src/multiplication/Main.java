@@ -12,12 +12,21 @@ import java.time.format.DateTimeFormatter;
 import java.util.concurrent.ForkJoinPool;
 
 public class Main {
-    public static void main(String[] args) throws IOException {
-        if (args.length == 0) {
-            testAll();
-        } else {
-            gatherData();
+    public static void main(String[] args) throws Exception {
+        if (args.length < 1)
+            throw new Exception("Brak parametru wejściowego");
+        switch (args[0]) {
+            case "0":
+                testAll();
+                break;
+            case "1":
+                gatherData();
+                break;
+            case "2":
+                findBestLeaf();
+                break;
         }
+
     }
 
     private static void testAll() {
@@ -83,69 +92,70 @@ public class Main {
     }
 
     private static void gatherData() throws IOException {
-        int leaf = 16;
+        int leaf = 240;
         int threads = Runtime.getRuntime().availableProcessors();
-        for(int i=0;i<3;i++){
-        var time = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss"));
-        try (var pool = new ForkJoinPool(threads)) {
-            var ops = new DoubleOps();
-            for (int n = 1; n < 1000; n += 5) {
+        for (int i = 0; i < 3; i++) {
+            var time = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss"));
+            try (var pool = new ForkJoinPool(threads)) {
+                var ops = new DoubleOps();
+                for (int n = 0; n <= 2500; n += 10) {
 
-                var rnd = new java.util.Random(42);
-                var x = ops.random(n, n, -1, 1, rnd);
-                var y = ops.random(n, n, -1, 1, rnd);
-                var naive = ops.newMatrix(n, n);
-                var binet = ops.newMatrix(n, n);
-                var binetPar = ops.newMatrix(n, n);
-                var strassen = ops.newMatrix(n, n);
-                var strassenPar = ops.newMatrix(n, n);
-                var laderman = ops.newMatrix(n, n);
-                var ladermanPar = ops.newMatrix(n, n);
+                    var rnd = new java.util.Random(42);
+                    var x = ops.random(n, n, -1, 1, rnd);
+                    var y = ops.random(n, n, -1, 1, rnd);
+                    var naive = ops.newMatrix(n, n);
+                    var binet = ops.newMatrix(n, n);
+                    var binetPar = ops.newMatrix(n, n);
+                    var strassen = ops.newMatrix(n, n);
+                    var strassenPar = ops.newMatrix(n, n);
+                    var laderman = ops.newMatrix(n, n);
+                    var ladermanPar = ops.newMatrix(n, n);
 
-                ops.resetCounters();
-                long t = System.nanoTime();
-                ops.multiply(x.view(), y.view(), naive.view());
-                saveData(n, "naive", ops, t, time);
+                    ops.resetCounters();
+                    long t = System.nanoTime();
+                    ops.multiply(x.view(), y.view(), naive.view());
+                    saveData(n, "naive", ops, t, time);
 
-                ops.resetCounters();
-                t = System.nanoTime();
-                Binet.multiply(ops, x.view(), y.view(), binet.view(), leaf);
-                saveData(n, "binet", ops, t, time);
+                    ops.resetCounters();
+                    t = System.nanoTime();
+                    Binet.multiply(ops, x.view(), y.view(), binet.view(), leaf);
+                    saveData(n, "binet", ops, t, time);
 
-                ops.resetCounters();
-                t = System.nanoTime();
-                Binet.multiply(ops, x.view(), y.view(), binetPar.view(), leaf, pool);
-                saveData(n, "binet_threads", ops, t, time);
+                    ops.resetCounters();
+                    t = System.nanoTime();
+                    Binet.multiply(ops, x.view(), y.view(), binetPar.view(), leaf, pool);
+                    saveData(n, "binet_threads", ops, t, time);
 
-                ops.resetCounters();
-                t = System.nanoTime();
-                Strassen.multiply(ops, x.view(), y.view(), strassen.view(), leaf);
-                saveData(n, "strassen", ops, t, time);
+                    ops.resetCounters();
+                    t = System.nanoTime();
+                    Strassen.multiply(ops, x.view(), y.view(), strassen.view(), leaf);
+                    saveData(n, "strassen", ops, t, time);
 
-                ops.resetCounters();
-                t = System.nanoTime();
-                Strassen.multiply(ops, x.view(), y.view(), strassenPar.view(), leaf, pool);
-                saveData(n, "strassen_threads", ops, t, time);
+                    ops.resetCounters();
+                    t = System.nanoTime();
+                    Strassen.multiply(ops, x.view(), y.view(), strassenPar.view(), leaf, pool);
+                    saveData(n, "strassen_threads", ops, t, time);
 
-                ops.resetCounters();
-                t = System.nanoTime();
-                Laderman.multiply(ops, x.view(), y.view(), laderman.view(), leaf);
-                saveData(n, "laderman", ops, t, time);
+                    ops.resetCounters();
+                    t = System.nanoTime();
+                    Laderman.multiply(ops, x.view(), y.view(), laderman.view(), leaf);
+                    saveData(n, "laderman", ops, t, time);
 
-                ops.resetCounters();
-                t = System.nanoTime();
-                Laderman.multiply(ops, x.view(), y.view(), ladermanPar.view(), leaf, pool);
-                saveData(n, "laderman_threads", ops, t, time);
+                    ops.resetCounters();
+                    t = System.nanoTime();
+                    Laderman.multiply(ops, x.view(), y.view(), ladermanPar.view(), leaf, pool);
+                    saveData(n, "laderman_threads", ops, t, time);
 
-                check(ops, naive, binet);
-                check(ops, naive, binetPar);
-                check(ops, naive, strassen);
-                check(ops, naive, strassenPar);
-                check(ops, naive, laderman);
-                check(ops, naive, ladermanPar);
+                    check(ops, naive, binet);
+                    check(ops, naive, binetPar);
+                    check(ops, naive, strassen);
+                    check(ops, naive, strassenPar);
+                    check(ops, naive, laderman);
+                    check(ops, naive, ladermanPar);
 
+                }
             }
-        }}
+        }
     }
 
     private static void report(String name, MatrixOps<?> ops, long start) {
@@ -158,6 +168,30 @@ public class Main {
             for (int j = 0; j < expected.cols(); j++)
                 if (Math.abs(ops.get(expected.view(), i, j) - ops.get(actual.view(), i, j)) > 1e-9)
                     throw new AssertionError("Różnica w (" + i + "," + j + ")");
+    }
+
+    private static void findBestLeaf() throws IOException {
+
+        int threads = Runtime.getRuntime().availableProcessors();
+        long t = System.nanoTime();
+        var rnd = new java.util.Random(42);
+        for (int leaf = 8; leaf <= 256; leaf += 8)
+            for (int i = 0; i < 3; i++) {
+                var time = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss"));
+                try (var pool = new ForkJoinPool(threads)) {
+                    var ops = new DoubleOps();
+                    for (int n = 1900; n < 2000; n += 10) {
+
+                        var x = ops.random(n, n, -1, 1, rnd);
+                        var y = ops.random(n, n, -1, 1, rnd);
+
+                        var binetPar = ops.newMatrix(n, n);
+                        t = System.nanoTime();
+                        Binet.multiply(ops, x.view(), y.view(), binetPar.view(), leaf, pool);
+                        saveData(n, String.format("binet_threads_%d-leaf_", leaf), ops, t, time);
+                    }
+                }
+            }
     }
 
     private static void saveData(int size, String name, MatrixOps<?> ops, long start, String time) throws IOException {
