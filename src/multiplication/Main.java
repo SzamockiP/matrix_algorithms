@@ -13,7 +13,7 @@ import java.util.concurrent.ForkJoinPool;
 
 public class Main {
     public static void main(String[] args) throws IOException {
-        if (args.length != 0) {
+        if (args.length == 0) {
             testAll();
         } else {
             gatherData();
@@ -84,11 +84,11 @@ public class Main {
 
     private static void gatherData() throws IOException {
         int threads = Runtime.getRuntime().availableProcessors();
-        for(int i=0;i<5;i++){
+        for(int i=0;i<3;i++){
         var time = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss"));
         try (var pool = new ForkJoinPool(threads)) {
             var ops = new DoubleOps();
-            for (int n = 2; n < 1000; n += 4) {
+            for (int n = 1; n < 1000; n += 5) {
 
                 var rnd = new java.util.Random(42);
                 var x = ops.random(n, n, -1, 1, rnd);

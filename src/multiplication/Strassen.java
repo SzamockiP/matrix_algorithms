@@ -32,9 +32,55 @@ public final class Strassen {
             int leaf, ForkJoinPool pool) {
         int m = a.rows(), k = a.cols(), n = b.cols();
 
-        if (Math.max(m, Math.max(k, n)) <= leaf || m < 2 || k < 2 || n < 2
-                || m % 2 != 0 || k % 2 != 0 || n % 2 != 0) {
+        if (Math.max(m, Math.max(k, n)) <= leaf || m < 2 || k < 2 || n < 2) {
             ops.multiply(a, b, c);
+            return;
+        }
+
+        int m1 = m - m % 2;
+        int k1 = k - k % 2;
+        int n1 = n - n % 2;
+
+        if (m1 != m || k1 != k || n1 != n) {
+            if (pool != null) {
+                ForkJoinTask<?> fRight = null;
+                ForkJoinTask<?> fBottom = null;
+
+                if (n1 < n) {
+                    fRight = ForkJoinTask.adapt(() -> {
+                        ops.multiply(a, b.block(0, n1, k, n - n1), c.block(0, n1, m, n - n1));
+                    }).fork();
+                }
+
+                if (m1 < m) {
+                    fBottom = ForkJoinTask.adapt(() -> {
+                        ops.multiply(a.block(m1, 0, m - m1, k), b.block(0, 0, k, n1), c.block(m1, 0, m - m1, n1));
+                    }).fork();
+                }
+
+                strassenMultiply(ops, a.block(0, 0, m1, k1), b.block(0, 0, k1, n1), c.block(0, 0, m1, n1), leaf, pool);
+
+                if (k1 < k) {
+                    ops.multiplyAdd(a.block(0, k1, m1, k - k1), b.block(k1, 0, k - k1, n1), c.block(0, 0, m1, n1));
+                }
+
+                if (fBottom != null) fBottom.join();
+                if (fRight != null) fRight.join();
+            } else {
+                strassenMultiply(ops, a.block(0, 0, m1, k1), b.block(0, 0, k1, n1), c.block(0, 0, m1, n1), leaf, pool);
+
+                if (k1 < k) {
+                    ops.multiplyAdd(a.block(0, k1, m1, k - k1), b.block(k1, 0, k - k1, n1), c.block(0, 0, m1, n1));
+                }
+
+                if (n1 < n) {
+                    ops.multiply(a, b.block(0, n1, k, n - n1), c.block(0, n1, m, n - n1));
+                }
+
+                if (m1 < m) {
+                    ops.multiply(a.block(m1, 0, m - m1, k), b.block(0, 0, k, n1), c.block(m1, 0, m - m1, n1));
+                }
+            }
             return;
         }
 
@@ -58,14 +104,15 @@ public final class Strassen {
         var c21 = c.block(m2, 0, m2, n2);
         var c22 = c.block(m2, n2, m2, n2);
 
-        // Bufory na wyniki M1–M7
-        var m1r = ops.newMatrix(m2, n2).view();
-        var m2r = ops.newMatrix(m2, n2).view();
-        var m3r = ops.newMatrix(m2, n2).view();
-        var m4r = ops.newMatrix(m2, n2).view();
-        var m5r = ops.newMatrix(m2, n2).view();
-        var m6r = ops.newMatrix(m2, n2).view();
-        var m7r = ops.newMatrix(m2, n2).view();
+        // Bufory na wyniki M1–M7 (7 bloków jako widoki jednego bufora)
+        var mBuf = ops.newMatrix(7 * m2, n2).view();
+        var m1r = mBuf.block(0 * m2, 0, m2, n2);
+        var m2r = mBuf.block(1 * m2, 0, m2, n2);
+        var m3r = mBuf.block(2 * m2, 0, m2, n2);
+        var m4r = mBuf.block(3 * m2, 0, m2, n2);
+        var m5r = mBuf.block(4 * m2, 0, m2, n2);
+        var m6r = mBuf.block(5 * m2, 0, m2, n2);
+        var m7r = mBuf.block(6 * m2, 0, m2, n2);
 
         // M1 = strassen(A11 + A22, B11 + B22)
         Runnable t1 = () -> {

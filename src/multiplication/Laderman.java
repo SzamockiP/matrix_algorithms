@@ -119,30 +119,31 @@ public class Laderman {
         var c32 = c.block(2 * m3, n3, m3, n3);
         var c33 = c.block(2 * m3, 2 * n3, m3, n3);
 
-        // Bufory na wyniki M1–M23
-        var m1r = ops.newMatrix(m3, n3).view();
-        var m2r = ops.newMatrix(m3, n3).view();
-        var m3r = ops.newMatrix(m3, n3).view();
-        var m4r = ops.newMatrix(m3, n3).view();
-        var m5r = ops.newMatrix(m3, n3).view();
-        var m6r = ops.newMatrix(m3, n3).view();
-        var m7r = ops.newMatrix(m3, n3).view();
-        var m8r = ops.newMatrix(m3, n3).view();
-        var m9r = ops.newMatrix(m3, n3).view();
-        var m10r = ops.newMatrix(m3, n3).view();
-        var m11r = ops.newMatrix(m3, n3).view();
-        var m12r = ops.newMatrix(m3, n3).view();
-        var m13r = ops.newMatrix(m3, n3).view();
-        var m14r = ops.newMatrix(m3, n3).view();
-        var m15r = ops.newMatrix(m3, n3).view();
-        var m16r = ops.newMatrix(m3, n3).view();
-        var m17r = ops.newMatrix(m3, n3).view();
-        var m18r = ops.newMatrix(m3, n3).view();
-        var m19r = ops.newMatrix(m3, n3).view();
-        var m20r = ops.newMatrix(m3, n3).view();
-        var m21r = ops.newMatrix(m3, n3).view();
-        var m22r = ops.newMatrix(m3, n3).view();
-        var m23r = ops.newMatrix(m3, n3).view();
+        // Jeden bufor na wyniki M1–M23 (23 bloki jako widoki)
+        var mBuf = ops.newMatrix(23 * m3, n3).view();
+        var m1r = mBuf.block(0 * m3, 0, m3, n3);
+        var m2r = mBuf.block(1 * m3, 0, m3, n3);
+        var m3r = mBuf.block(2 * m3, 0, m3, n3);
+        var m4r = mBuf.block(3 * m3, 0, m3, n3);
+        var m5r = mBuf.block(4 * m3, 0, m3, n3);
+        var m6r = mBuf.block(5 * m3, 0, m3, n3);
+        var m7r = mBuf.block(6 * m3, 0, m3, n3);
+        var m8r = mBuf.block(7 * m3, 0, m3, n3);
+        var m9r = mBuf.block(8 * m3, 0, m3, n3);
+        var m10r = mBuf.block(9 * m3, 0, m3, n3);
+        var m11r = mBuf.block(10 * m3, 0, m3, n3);
+        var m12r = mBuf.block(11 * m3, 0, m3, n3);
+        var m13r = mBuf.block(12 * m3, 0, m3, n3);
+        var m14r = mBuf.block(13 * m3, 0, m3, n3);
+        var m15r = mBuf.block(14 * m3, 0, m3, n3);
+        var m16r = mBuf.block(15 * m3, 0, m3, n3);
+        var m17r = mBuf.block(16 * m3, 0, m3, n3);
+        var m18r = mBuf.block(17 * m3, 0, m3, n3);
+        var m19r = mBuf.block(18 * m3, 0, m3, n3);
+        var m20r = mBuf.block(19 * m3, 0, m3, n3);
+        var m21r = mBuf.block(20 * m3, 0, m3, n3);
+        var m22r = mBuf.block(21 * m3, 0, m3, n3);
+        var m23r = mBuf.block(22 * m3, 0, m3, n3);
 
         // M1 = (A11 + A12 + A13 - A21 - A22 - A32 - A33) * B22
         Runnable t1 = () -> {

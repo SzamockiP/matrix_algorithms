@@ -140,6 +140,7 @@ def generate_plots(output_dir: Path, data: dict):
     plt.close()
     print(f"\nWygenerowano wykres czasu: {time_plot_path}")
 
+    data = {k: v for k, v in data.items() if "threads" not in k}
     # 2. Wykres Mnożenia vs Rozmiar (ilość wierszy)
     plt.figure(figsize=(10, 6))
     for algo_name, vals in data.items():
@@ -149,6 +150,7 @@ def generate_plots(output_dir: Path, data: dict):
     plt.title("Liczba operacji mnożenia w zależności od rozmiaru macierzy (N)")
     plt.xlabel("Liczba wierszy / kolumn (N)")
     plt.ylabel("Liczba mnożeń")
+    plt.yscale('log')
     plt.grid(True, linestyle=":", alpha=0.6)
     plt.legend()
     plt.tight_layout()
@@ -167,6 +169,7 @@ def generate_plots(output_dir: Path, data: dict):
     plt.ylabel("Liczba dodawań")
     plt.grid(True, linestyle=":", alpha=0.6)
     plt.legend()
+    plt.yscale('log')
     plt.tight_layout()
     adds_plot_path = output_dir / "wykres_dodawania.png"
     plt.savefig(adds_plot_path, dpi=300)
