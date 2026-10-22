@@ -420,11 +420,6 @@ public class Laderman {
             t23.run();
         }
 
-        // C11 = M6 + M14 + M19
-        Runnable s11 = () -> {
-            ops.add(m6r, m14r, c11);
-            ops.add(c11, m19r, c11);
-        };
         // Składanie wyniku z M1–M23
         Runnable s11 = () -> {
             // C11 = M6 + M14 + M19
