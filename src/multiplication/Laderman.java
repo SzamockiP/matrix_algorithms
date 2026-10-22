@@ -425,9 +425,15 @@ public class Laderman {
             ops.add(m6r, m14r, c11);
             ops.add(c11, m19r, c11);
         };
+        // Składanie wyniku z M1–M23
+        Runnable s11 = () -> {
+            // C11 = M6 + M14 + M19
+            ops.add(m6r, m14r, c11);
+            ops.add(c11, m19r, c11);
+        };
 
-        // C12 = M1 + M4 + M5 + M6 + M12 + M14 + M15
         Runnable s12 = () -> {
+            // C12 = M1 + M4 + M5 + M6 + M12 + M14 + M15
             ops.add(m1r, m4r, c12);
             ops.add(c12, m5r, c12);
             ops.add(c12, m6r, c12);
@@ -436,8 +442,8 @@ public class Laderman {
             ops.add(c12, m15r, c12);
         };
 
-        // C13 = M6 + M7 + M9 + M10 + M14 + M16 + M18
         Runnable s13 = () -> {
+            // C13 = M6 + M7 + M9 + M10 + M14 + M16 + M18
             ops.add(m6r, m7r, c13);
             ops.add(c13, m9r, c13);
             ops.add(c13, m10r, c13);
@@ -446,8 +452,8 @@ public class Laderman {
             ops.add(c13, m18r, c13);
         };
 
-        // C21 = M2 + M3 + M4 + M6 + M14 + M16 + M17
         Runnable s21 = () -> {
+            // C21 = M2 + M3 + M4 + M6 + M14 + M16 + M17
             ops.add(m2r, m3r, c21);
             ops.add(c21, m4r, c21);
             ops.add(c21, m6r, c21);
@@ -456,24 +462,24 @@ public class Laderman {
             ops.add(c21, m17r, c21);
         };
 
-        // C22 = M2 + M4 + M5 + M6 + M20
         Runnable s22 = () -> {
+            // C22 = M2 + M4 + M5 + M6 + M20
             ops.add(m2r, m4r, c22);
             ops.add(c22, m5r, c22);
             ops.add(c22, m6r, c22);
             ops.add(c22, m20r, c22);
         };
 
-        // C23 = M14 + M16 + M17 + M18 + M21
         Runnable s23 = () -> {
+            // C23 = M14 + M16 + M17 + M18 + M21
             ops.add(m14r, m16r, c23);
             ops.add(c23, m17r, c23);
             ops.add(c23, m18r, c23);
             ops.add(c23, m21r, c23);
         };
 
-        // C31 = M6 + M7 + M8 + M11 + M12 + M13 + M14
         Runnable s31 = () -> {
+            // C31 = M6 + M7 + M8 + M11 + M12 + M13 + M14
             ops.add(m6r, m7r, c31);
             ops.add(c31, m8r, c31);
             ops.add(c31, m11r, c31);
@@ -482,16 +488,16 @@ public class Laderman {
             ops.add(c31, m14r, c31);
         };
 
-        // C32 = M12 + M13 + M14 + M15 + M22
         Runnable s32 = () -> {
+            // C32 = M12 + M13 + M14 + M15 + M22
             ops.add(m12r, m13r, c32);
             ops.add(c32, m14r, c32);
             ops.add(c32, m15r, c32);
             ops.add(c32, m22r, c32);
         };
 
-        // C33 = M6 + M7 + M8 + M9 + M23
         Runnable s33 = () -> {
+            // C33 = M6 + M7 + M8 + M9 + M23
             ops.add(m6r, m7r, c33);
             ops.add(c33, m8r, c33);
             ops.add(c33, m9r, c33);
@@ -499,23 +505,23 @@ public class Laderman {
         };
 
         if (pool != null) {
-            var g11 = ForkJoinTask.adapt(s11).fork();
-            var g12 = ForkJoinTask.adapt(s12).fork();
-            var g13 = ForkJoinTask.adapt(s13).fork();
-            var g21 = ForkJoinTask.adapt(s21).fork();
-            var g22 = ForkJoinTask.adapt(s22).fork();
-            var g23 = ForkJoinTask.adapt(s23).fork();
-            var g31 = ForkJoinTask.adapt(s31).fork();
-            var g32 = ForkJoinTask.adapt(s32).fork();
+            var f11 = ForkJoinTask.adapt(s11).fork();
+            var f12 = ForkJoinTask.adapt(s12).fork();
+            var f13 = ForkJoinTask.adapt(s13).fork();
+            var f21 = ForkJoinTask.adapt(s21).fork();
+            var f22 = ForkJoinTask.adapt(s22).fork();
+            var f23 = ForkJoinTask.adapt(s23).fork();
+            var f31 = ForkJoinTask.adapt(s31).fork();
+            var f32 = ForkJoinTask.adapt(s32).fork();
             s33.run();
-            g32.join();
-            g31.join();
-            g23.join();
-            g22.join();
-            g21.join();
-            g13.join();
-            g12.join();
-            g11.join();
+            f32.join();
+            f31.join();
+            f23.join();
+            f22.join();
+            f21.join();
+            f13.join();
+            f12.join();
+            f11.join();
         } else {
             s11.run();
             s12.run();

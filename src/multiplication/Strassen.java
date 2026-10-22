@@ -198,38 +198,38 @@ public final class Strassen {
         }
 
         // Składanie wyniku z M1–M7
-        // C11 = M1 + M4 - M5 + M7
         Runnable s11 = () -> {
+            // C11 = M1 + M4 - M5 + M7
             ops.add(m1r, m4r, c11);
             ops.subtract(c11, m5r, c11);
             ops.add(c11, m7r, c11);
         };
 
-        // C12 = M3 + M5
         Runnable s12 = () -> {
+            // C12 = M3 + M5
             ops.add(m3r, m5r, c12);
         };
 
-        // C21 = M2 + M4
         Runnable s21 = () -> {
+            // C21 = M2 + M4
             ops.add(m2r, m4r, c21);
         };
 
-        // C22 = M1 - M2 + M3 + M6
         Runnable s22 = () -> {
+            // C22 = M1 - M2 + M3 + M6
             ops.subtract(m1r, m2r, c22);
             ops.add(c22, m3r, c22);
             ops.add(c22, m6r, c22);
         };
 
         if (pool != null) {
-            var g11 = ForkJoinTask.adapt(s11).fork();
-            var g12 = ForkJoinTask.adapt(s12).fork();
-            var g21 = ForkJoinTask.adapt(s21).fork();
+            var f11 = ForkJoinTask.adapt(s11).fork();
+            var f12 = ForkJoinTask.adapt(s12).fork();
+            var f21 = ForkJoinTask.adapt(s21).fork();
             s22.run();
-            g21.join();
-            g12.join();
-            g11.join();
+            f21.join();
+            f12.join();
+            f11.join();
         } else {
             s11.run();
             s12.run();
