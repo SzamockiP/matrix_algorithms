@@ -83,6 +83,7 @@ public class Main {
     }
 
     private static void gatherData() throws IOException {
+        int leaf = 16;
         int threads = Runtime.getRuntime().availableProcessors();
         for(int i=0;i<3;i++){
         var time = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss"));
@@ -108,32 +109,32 @@ public class Main {
 
                 ops.resetCounters();
                 t = System.nanoTime();
-                Binet.multiply(ops, x.view(), y.view(), binet.view(), 64);
+                Binet.multiply(ops, x.view(), y.view(), binet.view(), leaf);
                 saveData(n, "binet", ops, t, time);
 
                 ops.resetCounters();
                 t = System.nanoTime();
-                Binet.multiply(ops, x.view(), y.view(), binetPar.view(), 64, pool);
+                Binet.multiply(ops, x.view(), y.view(), binetPar.view(), leaf, pool);
                 saveData(n, "binet_threads", ops, t, time);
 
                 ops.resetCounters();
                 t = System.nanoTime();
-                Strassen.multiply(ops, x.view(), y.view(), strassen.view(), 64);
+                Strassen.multiply(ops, x.view(), y.view(), strassen.view(), leaf);
                 saveData(n, "strassen", ops, t, time);
 
                 ops.resetCounters();
                 t = System.nanoTime();
-                Strassen.multiply(ops, x.view(), y.view(), strassenPar.view(), 64, pool);
+                Strassen.multiply(ops, x.view(), y.view(), strassenPar.view(), leaf, pool);
                 saveData(n, "strassen_threads", ops, t, time);
 
                 ops.resetCounters();
                 t = System.nanoTime();
-                Laderman.multiply(ops, x.view(), y.view(), laderman.view(), 64);
+                Laderman.multiply(ops, x.view(), y.view(), laderman.view(), leaf);
                 saveData(n, "laderman", ops, t, time);
 
                 ops.resetCounters();
                 t = System.nanoTime();
-                Laderman.multiply(ops, x.view(), y.view(), ladermanPar.view(), 64, pool);
+                Laderman.multiply(ops, x.view(), y.view(), ladermanPar.view(), leaf, pool);
                 saveData(n, "laderman_threads", ops, t, time);
 
                 check(ops, naive, binet);
