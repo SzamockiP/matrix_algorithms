@@ -32,9 +32,55 @@ public class Laderman {
             int leaf, ForkJoinPool pool) {
         int m = a.rows(), k = a.cols(), n = b.cols();
 
-        if (Math.max(m, Math.max(k, n)) <= leaf || m < 3 || k < 3 || n < 3
-                || m % 3 != 0 || k % 3 != 0 || n % 3 != 0) {
+        if (Math.max(m, Math.max(k, n)) <= leaf || m < 3 || k < 3 || n < 3) {
             ops.multiply(a, b, c);
+            return;
+        }
+
+        int m1 = m - m % 3;
+        int k1 = k - k % 3;
+        int n1 = n - n % 3;
+
+        if (m1 != m || k1 != k || n1 != n) {
+            if (pool != null) {
+                ForkJoinTask<?> fRight = null;
+                ForkJoinTask<?> fBottom = null;
+
+                if (n1 < n) {
+                    fRight = ForkJoinTask.adapt(() -> {
+                        ops.multiply(a, b.block(0, n1, k, n - n1), c.block(0, n1, m, n - n1));
+                    }).fork();
+                }
+
+                if (m1 < m) {
+                    fBottom = ForkJoinTask.adapt(() -> {
+                        ops.multiply(a.block(m1, 0, m - m1, k), b.block(0, 0, k, n1), c.block(m1, 0, m - m1, n1));
+                    }).fork();
+                }
+
+                ladermanMultiply(ops, a.block(0, 0, m1, k1), b.block(0, 0, k1, n1), c.block(0, 0, m1, n1), leaf, pool);
+
+                if (k1 < k) {
+                    ops.multiplyAdd(a.block(0, k1, m1, k - k1), b.block(k1, 0, k - k1, n1), c.block(0, 0, m1, n1));
+                }
+
+                if (fBottom != null) fBottom.join();
+                if (fRight != null) fRight.join();
+            } else {
+                ladermanMultiply(ops, a.block(0, 0, m1, k1), b.block(0, 0, k1, n1), c.block(0, 0, m1, n1), leaf, pool);
+
+                if (k1 < k) {
+                    ops.multiplyAdd(a.block(0, k1, m1, k - k1), b.block(k1, 0, k - k1, n1), c.block(0, 0, m1, n1));
+                }
+
+                if (n1 < n) {
+                    ops.multiply(a, b.block(0, n1, k, n - n1), c.block(0, n1, m, n - n1));
+                }
+
+                if (m1 < m) {
+                    ops.multiply(a.block(m1, 0, m - m1, k), b.block(0, 0, k, n1), c.block(m1, 0, m - m1, n1));
+                }
+            }
             return;
         }
 

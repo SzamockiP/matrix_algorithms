@@ -13,7 +13,7 @@ import java.util.concurrent.ForkJoinPool;
 
 public class Main {
     public static void main(String[] args) throws IOException {
-        if (args.length == 0) {
+        if (args.length != 0) {
             testAll();
         } else {
             gatherData();
@@ -56,7 +56,7 @@ public class Main {
             ops.resetCounters();
             t = System.nanoTime();
             Strassen.multiply(ops, x.view(), y.view(), strassen.view(), 64);
-            report("Strassen (" + threads + " wątków)", ops, t);
+            report("Strassen", ops, t);
 
             ops.resetCounters();
             t = System.nanoTime();
@@ -66,7 +66,7 @@ public class Main {
             ops.resetCounters();
             t = System.nanoTime();
             Laderman.multiply(ops, x.view(), y.view(), laderman.view(), 64);
-            report("Laderman (" + threads + " wątków)", ops, t);
+            report("Laderman", ops, t);
 
             ops.resetCounters();
             t = System.nanoTime();
@@ -84,10 +84,11 @@ public class Main {
 
     private static void gatherData() throws IOException {
         int threads = Runtime.getRuntime().availableProcessors();
+        for(int i=0;i<5;i++){
         var time = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss"));
         try (var pool = new ForkJoinPool(threads)) {
             var ops = new DoubleOps();
-            for (int n = 2; n < 2000; n += 4) {
+            for (int n = 2; n < 1000; n += 4) {
 
                 var rnd = new java.util.Random(42);
                 var x = ops.random(n, n, -1, 1, rnd);
@@ -143,7 +144,7 @@ public class Main {
                 check(ops, naive, ladermanPar);
 
             }
-        }
+        }}
     }
 
     private static void report(String name, MatrixOps<?> ops, long start) {
