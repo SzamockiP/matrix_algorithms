@@ -114,10 +114,14 @@ public final class Strassen {
         var m6r = mBuf.block(5 * m2, 0, m2, n2);
         var m7r = mBuf.block(6 * m2, 0, m2, n2);
 
+        // Arena na tymczasowe sumy: po jednym lA (5) i lB (5) na zadanie
+        var tA = ops.newMatrix(5 * m2, k2).view();
+        var tB = ops.newMatrix(5 * k2, n2).view();
+
         // M1 = strassen(A11 + A22, B11 + B22)
         Runnable t1 = () -> {
-            var lA = ops.newMatrix(m2, k2).view();
-            var lB = ops.newMatrix(k2, n2).view();
+            var lA = tA.block(0 * m2, 0, m2, k2);
+            var lB = tB.block(0 * k2, 0, k2, n2);
             ops.add(a11, a22, lA);
             ops.add(b11, b22, lB);
             strassenMultiply(ops, lA, lB, m1r, leaf, pool);
@@ -125,36 +129,36 @@ public final class Strassen {
 
         // M2 = strassen(A21 + A22, B11)
         Runnable t2 = () -> {
-            var lA = ops.newMatrix(m2, k2).view();
+            var lA = tA.block(1 * m2, 0, m2, k2);
             ops.add(a21, a22, lA);
             strassenMultiply(ops, lA, b11, m2r, leaf, pool);
         };
 
         // M3 = strassen(A11, B12 - B22)
         Runnable t3 = () -> {
-            var lB = ops.newMatrix(k2, n2).view();
+            var lB = tB.block(1 * k2, 0, k2, n2);
             ops.subtract(b12, b22, lB);
             strassenMultiply(ops, a11, lB, m3r, leaf, pool);
         };
 
         // M4 = strassen(A22, B21 - B11)
         Runnable t4 = () -> {
-            var lB = ops.newMatrix(k2, n2).view();
+            var lB = tB.block(2 * k2, 0, k2, n2);
             ops.subtract(b21, b11, lB);
             strassenMultiply(ops, a22, lB, m4r, leaf, pool);
         };
 
         // M5 = strassen(A11 + A12, B22)
         Runnable t5 = () -> {
-            var lA = ops.newMatrix(m2, k2).view();
+            var lA = tA.block(2 * m2, 0, m2, k2);
             ops.add(a11, a12, lA);
             strassenMultiply(ops, lA, b22, m5r, leaf, pool);
         };
 
         // M6 = strassen(A21 - A11, B11 + B12)
         Runnable t6 = () -> {
-            var lA = ops.newMatrix(m2, k2).view();
-            var lB = ops.newMatrix(k2, n2).view();
+            var lA = tA.block(3 * m2, 0, m2, k2);
+            var lB = tB.block(3 * k2, 0, k2, n2);
             ops.subtract(a21, a11, lA);
             ops.add(b11, b12, lB);
             strassenMultiply(ops, lA, lB, m6r, leaf, pool);
@@ -162,8 +166,8 @@ public final class Strassen {
 
         // M7 = strassen(A12 - A22, B21 + B22)
         Runnable t7 = () -> {
-            var lA = ops.newMatrix(m2, k2).view();
-            var lB = ops.newMatrix(k2, n2).view();
+            var lA = tA.block(4 * m2, 0, m2, k2);
+            var lB = tB.block(4 * k2, 0, k2, n2);
             ops.subtract(a12, a22, lA);
             ops.add(b21, b22, lB);
             strassenMultiply(ops, lA, lB, m7r, leaf, pool);
@@ -195,19 +199,42 @@ public final class Strassen {
 
         // Składanie wyniku z M1–M7
         // C11 = M1 + M4 - M5 + M7
-        ops.add(m1r, m4r, c11);
-        ops.subtract(c11, m5r, c11);
-        ops.add(c11, m7r, c11);
+        Runnable s11 = () -> {
+            ops.add(m1r, m4r, c11);
+            ops.subtract(c11, m5r, c11);
+            ops.add(c11, m7r, c11);
+        };
 
         // C12 = M3 + M5
-        ops.add(m3r, m5r, c12);
+        Runnable s12 = () -> {
+            ops.add(m3r, m5r, c12);
+        };
 
         // C21 = M2 + M4
-        ops.add(m2r, m4r, c21);
+        Runnable s21 = () -> {
+            ops.add(m2r, m4r, c21);
+        };
 
         // C22 = M1 - M2 + M3 + M6
-        ops.subtract(m1r, m2r, c22);
-        ops.add(c22, m3r, c22);
-        ops.add(c22, m6r, c22);
+        Runnable s22 = () -> {
+            ops.subtract(m1r, m2r, c22);
+            ops.add(c22, m3r, c22);
+            ops.add(c22, m6r, c22);
+        };
+
+        if (pool != null) {
+            var g11 = ForkJoinTask.adapt(s11).fork();
+            var g12 = ForkJoinTask.adapt(s12).fork();
+            var g21 = ForkJoinTask.adapt(s21).fork();
+            s22.run();
+            g21.join();
+            g12.join();
+            g11.join();
+        } else {
+            s11.run();
+            s12.run();
+            s21.run();
+            s22.run();
+        }
     }
 }

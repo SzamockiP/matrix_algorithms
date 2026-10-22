@@ -47,8 +47,9 @@ public final class DoubleOps extends MatrixOps<double[]> {
         for (int i = 0; i < a.rows; i++)
             for (int k = 0; k < a.cols; k++) {
                 double aik = a.data[a.idx(i, k)];
+                int cBase = c.idx(i, 0), bBase = b.idx(k, 0);
                 for (int j = 0; j < b.cols; j++)
-                    c.data[c.idx(i, j)] += aik * b.data[b.idx(k, j)];
+                    c.data[cBase + j] += aik * b.data[bBase + j];
             }
     }
 }
