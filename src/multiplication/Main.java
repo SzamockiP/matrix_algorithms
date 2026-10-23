@@ -14,7 +14,8 @@ import java.util.concurrent.ForkJoinPool;
 public class Main {
     public static void main(String[] args) throws Exception {
         if (args.length < 1)
-            throw new Exception("Brak parametru wejściowego");
+            testAll();
+//            throw new Exception("Brak parametru wejściowego");
         switch (args[0]) {
             case "0":
                 testAll();
@@ -34,11 +35,12 @@ public class Main {
 
         try (var pool = new ForkJoinPool(threads)) {
             var ops = new DoubleOps();
-            int n = 2000;
+            int n = 5000;
+            int leaf = 240;
 
             var rnd = new java.util.Random(42);
-            var x = ops.random(n, n, -1, 1, rnd);
-            var y = ops.random(n, n, -1, 1, rnd);
+            var x = ops.random(n, n, 1e-8, 1, rnd);
+            var y = ops.random(n, n, 1e-8, 1, rnd);
             var naive = ops.newMatrix(n, n);
             var binet = ops.newMatrix(n, n);
             var binetPar = ops.newMatrix(n, n);
@@ -54,32 +56,32 @@ public class Main {
 
             ops.resetCounters();
             t = System.nanoTime();
-            Binet.multiply(ops, x.view(), y.view(), binet.view(), 64);
+            Binet.multiply(ops, x.view(), y.view(), binet.view(), leaf);
             report("Binet", ops, t);
 
             ops.resetCounters();
             t = System.nanoTime();
-            Binet.multiply(ops, x.view(), y.view(), binetPar.view(), 64, pool);
+            Binet.multiply(ops, x.view(), y.view(), binetPar.view(), leaf, pool);
             report("Binet (" + threads + " wątków)", ops, t);
 
             ops.resetCounters();
             t = System.nanoTime();
-            Strassen.multiply(ops, x.view(), y.view(), strassen.view(), 64);
+            Strassen.multiply(ops, x.view(), y.view(), strassen.view(), leaf);
             report("Strassen", ops, t);
 
             ops.resetCounters();
             t = System.nanoTime();
-            Strassen.multiply(ops, x.view(), y.view(), strassenPar.view(), 64, pool);
+            Strassen.multiply(ops, x.view(), y.view(), strassenPar.view(), leaf, pool);
             report("Strassen (" + threads + " wątków)", ops, t);
 
             ops.resetCounters();
             t = System.nanoTime();
-            Laderman.multiply(ops, x.view(), y.view(), laderman.view(), 64);
+            Laderman.multiply(ops, x.view(), y.view(), laderman.view(), leaf);
             report("Laderman", ops, t);
 
             ops.resetCounters();
             t = System.nanoTime();
-            Laderman.multiply(ops, x.view(), y.view(), ladermanPar.view(), 64, pool);
+            Laderman.multiply(ops, x.view(), y.view(), ladermanPar.view(), leaf, pool);
             report("Laderman (" + threads + " wątków)", ops, t);
 
             check(ops, naive, binet);
@@ -101,8 +103,8 @@ public class Main {
                 for (int n = 0; n <= 2500; n += 10) {
 
                     var rnd = new java.util.Random(42);
-                    var x = ops.random(n, n, -1, 1, rnd);
-                    var y = ops.random(n, n, -1, 1, rnd);
+                    var x = ops.random(n, n, 1e-8, 1, rnd);
+                    var y = ops.random(n, n, 1e-8, 1, rnd);
                     var naive = ops.newMatrix(n, n);
                     var binet = ops.newMatrix(n, n);
                     var binetPar = ops.newMatrix(n, n);
@@ -182,8 +184,8 @@ public class Main {
                     var ops = new DoubleOps();
                     for (int n = 1900; n < 2000; n += 10) {
 
-                        var x = ops.random(n, n, -1, 1, rnd);
-                        var y = ops.random(n, n, -1, 1, rnd);
+                        var x = ops.random(n, n, 1e-8, 1, rnd);
+                        var y = ops.random(n, n, 1e-8, 1, rnd);
 
                         var binetPar = ops.newMatrix(n, n);
                         t = System.nanoTime();
