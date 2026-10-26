@@ -47,7 +47,27 @@ public abstract class MatrixOps<A> {
         adds.add(n);
     }
 
+    // c = -a (c może być a)
+    public final void negate(MatrixView<A> a, MatrixView<A> c) {
+        checkSame(a, a, c);
+        negateImpl(a, c);
+        adds.add((long) a.rows * a.cols);
+    }
+
+    // c = a^-1 metodą Gaussa-Jordana (a bez zmian, c nie może nachodzić na a)
+    public final void invert(MatrixView<A> a, MatrixView<A> c) {
+        checkSame(a, a, c);
+        if (a.rows != a.cols)
+            throw new IllegalArgumentException("Macierz musi być kwadratowa");
+        invertImpl(a, c);
+        long n = a.rows;
+        muls.add(2 * n * n * n);  // z grubsza: n pivotów * n wierszy * 2n kolumn
+        adds.add(2 * n * n * n);
+    }
+
     protected abstract A alloc(int n);
+    protected abstract void negateImpl(MatrixView<A> a, MatrixView<A> c);
+    protected abstract void invertImpl(MatrixView<A> a, MatrixView<A> c);
     protected abstract void zeroImpl(MatrixView<A> c);
     protected abstract void addImpl(MatrixView<A> a, MatrixView<A> b, MatrixView<A> c);
     protected abstract void subtractImpl(MatrixView<A> a, MatrixView<A> b, MatrixView<A> c);

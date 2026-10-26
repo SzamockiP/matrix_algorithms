@@ -43,6 +43,53 @@ public final class DoubleOps extends MatrixOps<double[]> {
     }
 
     @Override
+    protected void negateImpl(MatrixView<double[]> a, MatrixView<double[]> c) {
+        for (int i = 0; i < a.rows; i++)
+            for (int j = 0; j < a.cols; j++)
+                c.data[c.idx(i, j)] = -a.data[a.idx(i, j)];
+    }
+
+    // Gauss-Jordan z częściowym wyborem elementu głównego; c startuje jako I
+    @Override
+    protected void invertImpl(MatrixView<double[]> a, MatrixView<double[]> c) {
+        int n = a.rows;
+        double[] w = new double[n * n];
+        for (int i = 0; i < n; i++)
+            System.arraycopy(a.data, a.idx(i, 0), w, i * n, n);
+        zeroImpl(c);
+        for (int i = 0; i < n; i++)
+            c.data[c.idx(i, i)] = 1.0;
+
+        for (int p = 0; p < n; p++) {
+            int best = p;
+            for (int r = p + 1; r < n; r++)
+                if (Math.abs(w[r * n + p]) > Math.abs(w[best * n + p])) best = r;
+            if (w[best * n + p] == 0.0)
+                throw new ArithmeticException("Macierz osobliwa");
+            if (best != p) {
+                for (int j = 0; j < n; j++) {
+                    double t = w[p * n + j]; w[p * n + j] = w[best * n + j]; w[best * n + j] = t;
+                    int ip = c.idx(p, j), ib = c.idx(best, j);
+                    t = c.data[ip]; c.data[ip] = c.data[ib]; c.data[ib] = t;
+                }
+            }
+            double inv = 1.0 / w[p * n + p];
+            for (int j = 0; j < n; j++) {
+                w[p * n + j] *= inv;
+                c.data[c.idx(p, j)] *= inv;
+            }
+            for (int r = 0; r < n; r++) {
+                double f = w[r * n + p];
+                if (r == p || f == 0.0) continue;
+                for (int j = 0; j < n; j++) {
+                    w[r * n + j] -= f * w[p * n + j];
+                    c.data[c.idx(r, j)] -= f * c.data[c.idx(p, j)];
+                }
+            }
+        }
+    }
+
+    @Override
     protected void multiplyAddImpl(MatrixView<double[]> a, MatrixView<double[]> b, MatrixView<double[]> c) {
         for (int i = 0; i < a.rows; i++)
             for (int k = 0; k < a.cols; k++) {
