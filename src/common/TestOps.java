@@ -90,6 +90,16 @@ public final class TestOps {
         };
     }
 
+    // elementy losowe z (1e-8, 1), do przekątnej dodane n: diagonalna dominacja, więc LU bez pivotowania jest stabilne
+    public static Inputs dominantRandom() {
+        return (ops, n, rnd) -> {
+            var a = ops.random(n, n, 1e-8, 1, rnd);
+            for (int i = 0; i < n; i++)
+                ops.set(a.view(), i, i, ops.get(a.view(), i, i) + n);
+            return List.of(a);
+        };
+    }
+
     public static void performTests(int leaf, int iterations, int minMatrixSize, int maxMatrixSize, int step,
                                     String module, Map<String, Algorithm> functions, Inputs inputs,
                                     Algorithm reference) throws IOException {

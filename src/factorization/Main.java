@@ -10,11 +10,15 @@ import java.util.Random;
 import java.util.concurrent.ForkJoinPool;
 
 public class Main {
+    // próg rekursji do pomiarów: najlepszy łączny czas wersji jedno- i wielowątkowej (zob. sprawozdanie)
+    private static final int LEAF = 176;
+
     public static void main(String[] args) throws Exception {
         switch (args.length < 1 ? "0" : args[0]) {
             case "0" -> testAll();
             case "1" -> gatherData();
             case "2" -> findBestLeaf();
+            case "3" -> probe(args[1], Integer.parseInt(args[2]));
             default -> throw new IllegalArgumentException("Nieznany tryb: " + args[0]);
         }
     }
@@ -78,7 +82,7 @@ public class Main {
         var functions = new LinkedHashMap<String, TestOps.Algorithm>();
         functions.put("naive", TestOps.NAIVE_LU);
         functions.putAll(algorithms());
-        TestOps.performTests(240, 3, 2500, 10, "lu", functions, TestOps.diagonallyDominant(), TestOps.NAIVE_LU);
+        TestOps.performTests(LEAF, 3, 2500, 10, "lu", functions, TestOps.dominantRandom(), TestOps.NAIVE_LU);
     }
 
     private static void findBestLeaf() throws IOException {
@@ -86,6 +90,23 @@ public class Main {
         for (int leaf = 8; leaf <= 256; leaf += 8)
             TestOps.performTests(leaf, 3, 1900, 1990, 10, "lu",
                     Map.of(String.format("binet_%d-leaf", leaf), binet), TestOps.diagonallyDominant(), null);
+    }
+
+    // jedna próba na macierzy n x n na puli wątków (używa utils/max_size.py): kod wyjścia 0 = OK, 2 = brak pamięci
+    private static void probe(String name, int n) {
+        var alg = algorithms().get(name);
+        if (alg == null) throw new IllegalArgumentException("Nieznany algorytm: " + name);
+        try (var pool = new ForkJoinPool()) {
+            var ops = new DoubleOps();
+            var in = java.util.List.of(TestOps.dominantRandom().create(ops, n, new Random(42)).getFirst().view());
+            var out = ops.newMatrix(n, n);
+            long t = System.nanoTime();
+            alg.run(ops, in, out.view(), LEAF, pool);
+            System.out.printf("OK %s n=%d %d ms%n", name, n, (System.nanoTime() - t) / 1_000_000);
+        } catch (OutOfMemoryError e) {
+            System.out.printf("OOM %s n=%d%n", name, n);
+            System.exit(2);
+        }
     }
 
     private static void report(String name, MatrixOps<?> ops, long start) {

@@ -12,7 +12,7 @@ except ImportError:
     HAS_MATPLOTLIB = False
 
 
-def process_directory(directory: Path):
+def process_directory(directory: Path, exclude=()):
     # Wzorzec dopasowujący pliki przebiegów: <algorytm>_<data>.csv
     # Ignoruje pliki już uśrednione (*_avg.csv)
     pattern = re.compile(r"^(.*)_(\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2})\.csv$")
@@ -23,7 +23,7 @@ def process_directory(directory: Path):
         if file_path.name.endswith("_avg.csv"):
             continue
         match = pattern.match(file_path.name)
-        if match:
+        if match and not any(match.group(1).startswith(x) for x in exclude):
             algo_name = match.group(1)
             files_by_algo[algo_name].append(file_path)
 
@@ -178,7 +178,9 @@ def generate_plots(output_dir: Path, data: dict):
 
 
 def main():
+    # użycie: average_runs.py [katalog] [prefiksy algorytmów do pominięcia, np. laderman]
     target_dir = Path(sys.argv[1]) if len(sys.argv) > 1 else Path("test_data/multiplication")
+    exclude = tuple(sys.argv[2:])
     if not target_dir.exists():
         target_dir = Path("test_data")
 
@@ -187,10 +189,10 @@ def main():
         csv_in_current = list(target_dir.glob("*.csv"))
 
         if csv_in_current or not subdirs:
-            process_directory(target_dir)
+            process_directory(target_dir, exclude)
         else:
             for subdir in subdirs:
-                process_directory(subdir)
+                process_directory(subdir, exclude)
     else:
         print(f"Ścieżka {target_dir} nie jest katalogiem!")
 

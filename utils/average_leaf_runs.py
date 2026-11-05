@@ -18,7 +18,7 @@ except ImportError:
 
 
 LEAF_PATTERN = re.compile(
-    r"^([a-zA-Z0-9_]+?)_(\d+)-leaf_+(.*)\.csv$",
+    r"^([a-zA-Z0-9_]+?)_(\d+)-leaf(_threads)?_+(\d{4}-.*)\.csv$",
     re.IGNORECASE
 )
 
@@ -56,7 +56,7 @@ def process_directory(directory: Path):
 
         match = LEAF_PATTERN.match(file_path.name)
         if match:
-            algo_name = match.group(1)
+            algo_name = match.group(1) + (match.group(3) or "")  # wersja wielowątkowa osobno
             leaf_size = int(match.group(2))
             files_by_algo_leaf[algo_name][leaf_size].append(file_path)
 
