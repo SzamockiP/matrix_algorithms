@@ -65,7 +65,48 @@ public abstract class MatrixOps<A> {
         adds.add(2 * n * n * n);
     }
 
+    // c = a (c nie może nachodzić na a)
+    public final void copy(MatrixView<A> a, MatrixView<A> c) {
+        checkSame(a, a, c);
+        copyImpl(a, c);
+    }
+
+    // a := LU w miejscu, bez pivotowania (L z jedynkową przekątną pod przekątną, U na i nad nią)
+    public final void luInPlace(MatrixView<A> a) {
+        if (a.rows != a.cols)
+            throw new IllegalArgumentException("Macierz musi być kwadratowa");
+        luInPlaceImpl(a);
+        long n = a.rows;
+        long upd = (n - 1) * n * (2 * n - 1) / 6;  // sum (n-1-k)^2
+        muls.add(upd + n * (n - 1) / 2);           // + dzielenia
+        adds.add(upd);
+    }
+
+    // b := L^-1 b w miejscu; L = dolny trójkąt l z jedynkową przekątną
+    public final void solveUnitLower(MatrixView<A> l, MatrixView<A> b) {
+        if (l.rows != l.cols || l.rows != b.rows)
+            throw new IllegalArgumentException("Niezgodne wymiary macierzy");
+        solveUnitLowerImpl(l, b);
+        long n = l.rows, t = n * (n - 1) / 2 * b.cols;
+        muls.add(t);
+        adds.add(t);
+    }
+
+    // b := b U^-1 w miejscu; U = górny trójkąt u razem z przekątną
+    public final void solveUpperRight(MatrixView<A> u, MatrixView<A> b) {
+        if (u.rows != u.cols || u.rows != b.cols)
+            throw new IllegalArgumentException("Niezgodne wymiary macierzy");
+        solveUpperRightImpl(u, b);
+        long n = u.rows, t = n * (n - 1) / 2 * b.rows;
+        muls.add(t + n * b.rows);  // + dzielenia
+        adds.add(t);
+    }
+
     protected abstract A alloc(int n);
+    protected abstract void copyImpl(MatrixView<A> a, MatrixView<A> c);
+    protected abstract void luInPlaceImpl(MatrixView<A> a);
+    protected abstract void solveUnitLowerImpl(MatrixView<A> l, MatrixView<A> b);
+    protected abstract void solveUpperRightImpl(MatrixView<A> u, MatrixView<A> b);
     protected abstract void negateImpl(MatrixView<A> a, MatrixView<A> c);
     protected abstract void invertImpl(MatrixView<A> a, MatrixView<A> c);
     protected abstract void zeroImpl(MatrixView<A> c);

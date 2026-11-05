@@ -1,6 +1,7 @@
 package common;
 
 import inversion.Inversion;
+import factorization.Lu;
 import multiplication.Multiplier;
 
 import java.io.FileWriter;
@@ -53,6 +54,20 @@ public final class TestOps {
             else Inversion.invert(ops, mul, in.get(0), out, leaf, pool);
         };
     }
+
+    // wynik: spakowane LU (patrz MatrixOps.luInPlace)
+    public static Algorithm lu(Multiplier<double[]> mul) {
+        return (ops, in, out, leaf, pool) -> {
+            ops.copy(in.get(0), out);
+            if (pool == null) Lu.factor(ops, mul, out, leaf);
+            else Lu.factor(ops, mul, out, leaf, pool);
+        };
+    }
+
+    public static final Algorithm NAIVE_LU = sequential((ops, in, out, leaf, pool) -> {
+        ops.copy(in.get(0), out);
+        ops.luInPlace(out);
+    });
 
     public static final Algorithm NAIVE_MULTIPLICATION = sequential((ops, in, out, leaf, pool) -> ops.multiply(in.get(0), in.get(1), out));
     public static final Algorithm NAIVE_INVERSION = sequential((ops, in, out, leaf, pool) -> ops.invert(in.get(0), out));

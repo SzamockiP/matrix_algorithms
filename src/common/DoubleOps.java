@@ -90,6 +90,55 @@ public final class DoubleOps extends MatrixOps<double[]> {
     }
 
     @Override
+    protected void copyImpl(MatrixView<double[]> a, MatrixView<double[]> c) {
+        for (int i = 0; i < a.rows; i++)
+            System.arraycopy(a.data, a.idx(i, 0), c.data, c.idx(i, 0), a.cols);
+    }
+
+    @Override
+    protected void luInPlaceImpl(MatrixView<double[]> a) {
+        int n = a.rows;
+        for (int k = 0; k < n; k++) {
+            int top = a.idx(k, 0);
+            double p = a.data[top + k];
+            if (p == 0.0)
+                throw new ArithmeticException("Zerowy element główny (brak pivotowania)");
+            for (int i = k + 1; i < n; i++) {
+                int row = a.idx(i, 0);
+                double f = a.data[row + k] / p;
+                a.data[row + k] = f;
+                for (int j = k + 1; j < n; j++)
+                    a.data[row + j] -= f * a.data[top + j];
+            }
+        }
+    }
+
+    @Override
+    protected void solveUnitLowerImpl(MatrixView<double[]> l, MatrixView<double[]> b) {
+        for (int i = 1; i < l.rows; i++)
+            for (int k = 0; k < i; k++) {
+                double f = l.data[l.idx(i, k)];
+                int bi = b.idx(i, 0), bk = b.idx(k, 0);
+                for (int j = 0; j < b.cols; j++)
+                    b.data[bi + j] -= f * b.data[bk + j];
+            }
+    }
+
+    @Override
+    protected void solveUpperRightImpl(MatrixView<double[]> u, MatrixView<double[]> b) {
+        int n = u.rows;
+        for (int r = 0; r < b.rows; r++) {
+            int base = b.idx(r, 0);
+            for (int j = 0; j < n; j++) {
+                double s = b.data[base + j];
+                for (int k = 0; k < j; k++)
+                    s -= b.data[base + k] * u.data[u.idx(k, j)];
+                b.data[base + j] = s / u.data[u.idx(j, j)];
+            }
+        }
+    }
+
+    @Override
     protected void multiplyAddImpl(MatrixView<double[]> a, MatrixView<double[]> b, MatrixView<double[]> c) {
         for (int i = 0; i < a.rows; i++)
             for (int k = 0; k < a.cols; k++) {
